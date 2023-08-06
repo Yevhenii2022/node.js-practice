@@ -8,7 +8,7 @@ class Cars {
       res.status(400);
       throw new Error("Provide all required fields");
     }
-    const car = await CarsModel.create({ ...req.body });
+    const car = await CarsModel.create({ ...req.body, owner: req.user.id });
     if (!car) {
       res.status(400);
       throw new Error("Unable to save");
@@ -17,7 +17,7 @@ class Cars {
   });
 
   getAll = asyncHandler(async (req, res) => {
-    const cars = await CarsModel.find({});
+    const cars = await CarsModel.find({ owner: req.user.id });
     if (!cars) {
       res.status(400);
       throw new Error("Unable to fetch cars");
