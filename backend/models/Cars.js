@@ -17,6 +17,10 @@ const carSchema = new Schema({
     type: String,
     enum: ["auto", "manual"],
   },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  }
 });
 
 module.exports = model("car", carSchema);
