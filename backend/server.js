@@ -1,4 +1,5 @@
 const path = require("path");
+const { engine } = require("express-handlebars");
 const express = require("express");
 const asyncHandler = require("express-async-handler");
 require("colors");
@@ -10,18 +11,50 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("./middlewares/authMiddleware");
 const RolesModel = require("./models/Roles");
+const sendEmail = require("./services/sendEmail");
 
 require("dotenv").config({ path: envPath });
 
 const app = express();
 
+app.use(express.static("public"));
+
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
+app.set("views", "backend/views");
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.render("home");
+});
+
+app.get("/about", (req, res) => {
+  res.render("about");
+});
+
+app.get("/contact", (req, res) => {
+  res.render("contact");
+});
+
+app.post("/sended", async (req, res) => {
+  res.render("sended", {
+    message: "Contact form send success",
+    user: req.body.userName,
+    email: req.body.userEmail,
+  });
+  await sendEmail(req.body);
+});
 
 // реєстрація - створення і збереження нового користувача в базі
 // аутентифікація - перевірка данних і порівняння данних користувача (надані дані = дані в базі данних)
 // авторизація - перевірка прав доступу
 // розлогінення - вихід користувача із системи додатку
+
+app.get("/register", (req, res) => {
+  res.render("register");
+});
 
 app.post(
   "/register",
@@ -52,9 +85,14 @@ app.post(
       roles: [roles.value],
     });
     // console.log(hashedPassword);
-    res.status(201).json({ code: 201, data: { email: user.email } });
+    res.render("registerSuccess");
+    // res.status(201).json({ code: 201, data: { email: user.email } });
   })
 );
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
 
 app.post(
   "/login",
@@ -83,7 +121,9 @@ app.post(
     });
     user.token = token;
     await user.save();
-    res.status(200).json({ code: 200, data: { email: user.email, token: user.token } });
+
+    res.render("loginSuccess");
+    // res.status(200).json({ code: 200, data: { email: user.email, token: user.token } });
   })
 );
 
